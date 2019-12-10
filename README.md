@@ -29,5 +29,5 @@
 
 ### 推荐的编辑器
 
-* [Typora](https://www.typora.io/) + Whitey 主题
+* [Typora](https://www.typora.io/) + [Whitey 主题](doc/whitey.css) + [我的定制主题](doc/whitey.user.css)
 * [Visual Studio Code](https://code.visualstudio.com/)
