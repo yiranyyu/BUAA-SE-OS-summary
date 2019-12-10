@@ -1,0 +1,19 @@
+em {
+	color: rebeccapurple;
+}
+
+strong {
+	color: #428bca;
+	font-weight: 900;
+	font-size: 1.06em
+}
+
+code,
+pre {
+	font-family: "Consolas", "Menlo", "Monaco", monospace, serif;
+	font-size: .9em;
+	margin: 0 2px;
+	padding: 2px 4px;
+	background-color: #EDF6FF;
+	border-radius: 3px;
+  }
