@@ -376,7 +376,7 @@ CPU调度决定可能发生在以下四种情况下：
 1. 当某个进程从执行状态切换到等待状态 （例如，由于I/O请求）；
 2. 当某个进程从执行状态切换到就绪状态 （例如，发生中断）；
 3. 当某个进程从等待状态切换到就绪状态 （例如，I/O完成）；
-4. 当某个进程终止。 
+4. 当某个进程终止。
 
 - 如果仅在1或4情况下发生的调度,是非抢占式调度
 - 在2或3情况下发生的调度,是抢占式调度
@@ -551,6 +551,40 @@ CPU调度决定可能发生在以下四种情况下：
 - 联系：当 CPU 从属于进程 A 的线程切换到一个属于进程 B 的线程的时候，就叫做发生了进程的切换。也就是说进程切换必定带来了线程切换
 - 区别：进程的切换要保存和恢复大量的上下文信息，会比较耗时
 
+#### 哲学家就餐问题
+
+这是一个关于 “死锁” 问题的实例。
+
+<img src="img/summary/200px-An_illustration_of_the_dining_philosophers_problem.png" alt="img" style="zoom:100%;" />
+
+
+
+​		哲学家就餐问题可以这样表述，假设有五位哲学家围坐在一张圆形餐桌旁，做以下两件事情之一：吃饭，或者思考。吃东西的时候，他们就停止思考，思考的时候也停止吃东西。餐桌中间有一大碗米饭，每位哲学家之间各有一支筷子。因为用一支筷子很难吃到米饭，所以假设哲学家必须用两支筷子吃东西。他们只能使用自己左右手边的那两支筷子。
+
+​		哲学家从来不交谈，这就很危险，可能产生死锁，每个哲学家都拿着左手的餐叉，永远都在等右边的餐叉（或者相反）。
+
+##### 解法 1 —— 服务生解法
+
+​		一个简单的解法是引入一个餐厅服务生，哲学家必须经过他的允许才能拿起餐叉。因为服务生知道哪支餐叉正在使用，所以他能够作出判断避免死锁。
+
+​		为了演示这种解法，假设哲学家依次标号为 A 至 E 。如果 A 和 C 在吃东西，则有四支餐叉在使用中。B 坐在 A 和 C 之间，所以两支餐叉都无法使用，而 D 和 E 之间有一只空余的餐叉。假设这时 D 想要吃东西。如果他拿起了第五支餐叉，就有可能发生死锁。相反，如果他征求服务生同意，服务生会让他等待。这样，我们就能保证下次当两把餐叉空余出来时，一定有一位哲学家可以成功的得到一对餐叉，从而避免了死锁。其实也就是通过检测预防来防治进入死锁状态
+
+##### 解法 2 —— 资源分级解法
+
+​		另一个简单的解法是为资源（这里是餐叉）分配一个[偏序](https://zh.wikipedia.org/wiki/偏序)或者分级的关系，并约定所有资源都按照这种顺序获取，按相反顺序释放，而且保证不会有两个无关资源同时被同一项工作所需要。在哲学家就餐问题中，资源（餐叉）按照某种规则编号为1至5，每一个工作单元（哲学家）总是先拿起左右两边编号较低的餐叉，再拿编号较高的。用完餐叉后，他总是先放下编号较高的餐叉，再放下编号较低的。在这种情况下，当四位哲学家同时拿起他们手边编号较低的餐叉时，只有编号最高的餐叉留在桌上，从而第五位哲学家就不能使用任何一支餐叉了。而且，只有一位哲学家能使用最高编号的餐叉，所以他能使用两支餐叉用餐。当他吃完后，他会先放下编号最高的餐叉，再放下编号较低的餐叉，从而让另一位哲学家拿起后边的这只开始吃东西。
+
+​		尽管资源分级能避免死锁，但这种策略并不总是实用的，特别是当所需资源的列表并不是事先知道的时候。例如，假设一个工作单元拿着资源3和5，并决定需要资源2，则必须先要释放5，之后释放3，才能得到2，之后必须重新按顺序获取3和5。对需要访问大量数据库记录的计算机程序来说，如果需要先释放高编号的记录才能访问新的记录，那么运行效率就不会高，因此这种方法在这里并不实用。
+
+##### Chandy/Misra 解法
+
+1984年，K. Mani Chandy和J. Misra提出了哲学家就餐问题的另一个解法，允许任意的用户（编号$P_{1},\cdots ,P_{n}$)争用任意数量的资源。与資源分級解法不同的是，这里编号可以是任意的。
+
+- 把餐叉湊成對，讓要吃的人先吃，沒餐叉的人得到一張換餐叉券。
+- 餓了，把換餐叉券交給有餐叉的人，有餐叉的人吃飽了會把餐叉交給有券的人。有了券的人不會再得到第二張券。
+- 保證有餐叉的都有得吃。
+
+这个解法允许很大的并行性，适用于任意大的问题。
+
 ## 进程通信与同步
 
 ​		首先给出临界区的概念：在同步的程式设计中，**临界区**（Critical section）指的是一个存取共用资源（例如：共用装置或是共享内存）的程式片段，而这些共用资源有无法同时被多个线程存取的特性
@@ -559,7 +593,7 @@ CPU调度决定可能发生在以下四种情况下：
 
 ​		锁是解决临界区问题的一种机制。 当一个进程进入临界区的时候会获得锁，这样其他进程就不能访问该临界区的公共变量了。当进程退出临界区的时候会释放锁，这时其他进程将可以修改临界区中的公共变量。
 
-​		锁的实现依赖于原子操作（锁的获取和释放）。原子操作可以通过许多方式实现，在单处理器系统中可以通过**关中断**实现。
+​		锁的实现依赖于原子操作（锁的获取和释放）。原子操作可以通过许多方式实现，在单处理器系统中可以通过**关中断**轻松实现。
 
 #### 关中断
 
@@ -569,19 +603,419 @@ CPU调度决定可能发生在以下四种情况下：
 
 ### 信号量
 
+​		信号量可以分为二值信号量和计数信号量，其中二值信号量与互斥锁的作用基本相同。一般提到信号量就是指计数信号量，它可以用于控制访问具有多个实例的资源。
+
+​		一种实际的应用方法就是：信号量的初值设定为可用资源的数量，而某一刻信号量的值则表示还有多少个资源实例可以被其余进程使用。如果信号量为负值，则表示有多少个进程再等待使用该资源。执行一次 `wait` 操作时，计数值减一；执行一次 `signal` 时，计数值加一。
+
+### 条件变量
+
+​		条件变量一般用于在多线程程序中实现 “等待 -> 唤醒” 逻辑，条件变量利用统一进程的线程之间共享全局变量的特点进行同步。主要包括两个动作：
+
+* 线程等待 “条件变量成立” 而挂起
+* 线程使 “条件成立”
+
+​		为了防止竞争，条件变量的使用总是和一个互斥锁结合在一起，线程改变条件变量状态前必须首先锁住互斥量。函数 `pthread_cond_wait` 把自己放到等待条件的线程列表上并挂起。
+
+​		条件变量从实现来讲可以有这样一个数据结构：一个变量和一个等待队列。变量的大小和范围表示某种条件，不满足该条件时进程将会被加入到等待队列，满足该条件时队列中的进程会被唤醒，变成就绪态
+
 ### 管程
+
+管程相比于信号量是一种更高级的同步工具
+
+#### 管程的定义
+
+管程是由局部于自己的若干公共变量及其说明和所有访问这些公共变量的过程所组成的软件模块。
+
+```js
+monitor monitor_name
+{
+    /* shared variable declarations */
+    function P1 (...) {
+        ...
+    }
+    function P2 (...){
+        ...
+    }
+    function Pn ( . . . ) {
+        ...
+    }
+
+
+    initialization_code (...){
+        ...
+    }
+}
+```
+
+
+
+因为管程是互斥进入的，每次只有一个进程在管程内处于活跃状态。所以在管程的入口可以维护有一个进程等待队列：
+
+<img src="img/summary/2-1Q1051631034Q.gif" alt="管程的示意图" style="zoom:80%;" />
+
+
+
+不过上面定义的管程在处理某些同步问题时还不够强大，所以需要定义附加的同步机制。这些可以由条件变量来实现，执行 `x.wait()` 的进程会被挂起，直到另一个进程执行了 `x.signal()`。使用不同的条件变量维护不同的资源等待队列，每种资源一个队列：
+
+<img src="img/summary/2-1Q105163152440.gif" alt="具有条件变量的管程" style="zoom:80%;" />
+
+
+
+##### 组成部分
+
+* 局部于管程的共享变量
+* 对数据结构进行操作的一组过程
+* 对局部于管程的数据进行初始化的语句
+
+#### 引入管程机制的目的
+
+1. 把分散在各进程中的临界区集中起来进行管理
+2. 防止进程有意或无意的违法同步操作
+
+#### 管程的属性
+
+* 共享性：管程可被系统范围内的进程互斥访问，属于共享资源
+* 安全性：管程的局部变量只能由管程的过程访问，不允许进程或者其他管程直接访问，管程不能访问不是局部于它的变量
+* 互斥性：多个进程对管程的访问是互斥的。任何时刻，管程中只能有一个活跃进程
+* 封装性：管程内的数据结构是私有的，只能在管程内使用
 
 ### 共享内存
 
+共享内存是多个进程之间通信的一种简单方法，其允许多个进程同时访问同一块内存，当一个进程改变了这块内存中的内容时，其他进程也都能察觉到这个变化（这就要求任何时候只要缓存被更新了，就要写入到内存中，从而令不同处理器能够立即察觉到）。
+
+<img src="img/summary/v2-195b0cf5f101ed8c11910fea9b77559e_hd.jpg" alt="img" style="zoom:80%;" />
+
+操作系统没有提供对共享内存访问的直接同步措施，一般需要用户使用互斥锁或者信号量控制进程访问共享内存。
+
+#### 共享内存的操作
+
+* 分配共享内存：创建或者打开一块共享内存，返回共享内存的标识符
+* 共享内存的映射：将一块共享内存映射到调用进程的数据段中，返回的指针指向共享内存在当前进程地址空间中的地址
+* 解除共享内存的映射：将共享内存和当前进程分离
+* 控制共享内存的属性
+
+```c
+// 创建或者打开共享内存
+int shmget(key_t key, size_t size, int shmflg);
+
+// 共享内存的映射
+void* shmat(int shmid, const void *shmaddr, int shmflg);
+
+// 解除映射
+int shmdt(const void *shmaddr);
+
+// 属性控制
+int shmctl(int shmid, int cmd, struct shmid_ds *buf);
+```
+
+
+
 ### 消息队列
+
+​		消息队列是一种进程间通信或者统一进程的不同线程间的通信方式。使用者可以向一个 FIFO 队列中写入或者读取输入，包括事件发生的时间、处理需要的参数等。消息的发送方和接收方不需要同时与消息队列交互，消息会保存在队列中，直到接收者取走它。和信号相比，消息队列能够传递更多的信息。与管道相比，消息队列提供了有格式的数据，这可以减少开发人员的工作量。
 
 ### 实例理解
 
-#### 生产者-消费者 问题
+#### 生产者-消费者问题
+
+问题：有一些生产者和一些消费者，生产者每次生产一个单位并放入缓存中，消费者每次从缓存中消耗一个单位，如何保证各个生产者和消费者实现合作以达到按顺序消费产品的目的。
+
+假设：
+
+* 建立一个生产者进程，N 个消费者进程
+* 用文件建立一个共享缓冲区
+* 生产者依次写入 0, 1, ...., max_iteration
+* 消费者每次从缓冲区中读取一个数，将取出的数字删除并输出本进程 PID + 数字到标准输出
+* 缓冲区大小为 10
+
+```c
+#define __LIBRARY__
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<fcntl.h>
+
+int consumer_number = 5;
+int max_iteration = 500;
+const int buffer_size = 10;
+const char *buffer_filename = "buffer.txt";
+
+sem_t *sem_empty;
+sem_t *sem_full;
+sem_t *sem_mutex;
+
+const int sem_init_empty = buffer_size;
+const int sem_init_full = buffer_size - sem_init_empty;
+const int sem_init_mutex = 1;
+
+const char *key_empty = "empty";
+const char *key_full = "full";
+const char *key_mutex = "mutex";
+
+int main(int argc, const char *argv[]) {
+    FILE *file = freopen("out.txt", "w", stdout);
+    if (!file) {
+        perror("Open redirect file error!\n");
+    }
+
+    ("Start un-linking");
+    fflush(stdout);
+    sem_unlink(key_empty);
+    sem_unlink(key_full);
+    sem_unlink(key_mutex);
+
+
+    if (!(sem_empty = sem_open(key_empty, sem_init_empty))) {
+        perror("sem_empty error!\n");
+        return -1;
+    }
+    if (!(sem_full = sem_open(key_full, sem_init_full))) {
+        perror("sem_full error!\n");
+        return -1;
+    }
+    if (!(sem_mutex = sem_open(key_mutex, sem_init_mutex))) {
+        perror("sem_mutex error!\n");
+        return -1;
+    }
+
+    puts("Semaphores linked\n");
+    fflush(stdout);
+
+    int fd = open(buffer_filename, O_RDWR | O_CREAT | O_TRUNC, 777);
+    if (fd == -1) {
+        perror("open buffer file error!\n");
+    }
+
+    int buf_in = 0, buf_out = 0;
+    pid_t pid;
+
+    if (!(pid = fork())) {
+        printf("Init producer %d\n", getpid());
+        fflush(stdout);
+
+        int i;
+        for (i = 0; i < max_iteration; ++i) {
+            sem_wait(sem_empty);
+            sem_wait(sem_mutex);
+
+            lseek(fd, buf_in * sizeof(int), SEEK_SET);
+            write(fd, (char *) &i, sizeof(int));
+            buf_in = (buf_in + 1) % buffer_size;
+
+            printf("Write %d\n", i);
+            fflush(stdout);
+
+            sem_post(sem_mutex);
+            sem_post(sem_full);
+        }
+        printf("End producer %d\n", getpid());
+        fflush(stdout);
+        return 0;
+    } else if (pid > 0) {
+
+        int j;
+        for (j = 0; j < consumer_number; ++j) {
+            if (!(pid = fork())) {
+                printf("Init consumer %d\n", getpid());
+                fflush(stdout);
+
+                int k, data;
+                for (k = 0; k < max_iteration / consumer_number; ++k) {
+                    sem_wait(sem_full);
+                    sem_wait(sem_mutex);
+
+                    lseek(fd, buf_out * sizeof(int), SEEK_SET);
+                    read(fd, (char *) &data, sizeof(int));
+                    buf_out = (buf_out + 1) % buffer_size;
+
+                    printf("%10d:  %4d\n", getpid(), data);
+                    fflush(stdout);
+
+                    sem_post(sem_mutex);
+                    sem_post(sem_empty);
+                }
+
+                printf("End consumer %d\n", getpid());
+                fflush(stdout);
+                return 0;
+            }
+        }
+    } else {
+        perror("fork error\n");
+        return -1;
+    }
+
+    sem_unlink(key_empty);
+    sem_unlink(key_full);
+    sem_unlink(key_mutex);
+    close(fd);
+    return 0;
+}
+```
+
+
 
 #### 读者-写者问题
 
-#### 哲学家就餐问题
+* 当没有写者时，多个读者线程可以同时读取资源
+* 只允许一个写者访问资源
+* 读、写互斥
+
+读者-写者问题可以分为三种情况
+
+##### 读者优先
+
+* 在读线程读取的过程中，如果有写进程想访问资源，需要等待到所有读线程都读取完毕
+* 除非当前有写者正在写资源，否则读者线程不需要等待就可以直接读
+
+分析一下为什么叫做读者优先：
+
+* 当读者获得临界区的访问权，则此时的 `reader_count > 0` 则读者尚未释放 `file_guard`。写者不能获得临界区的访问权，有一个被阻塞在 `file_guard` 信号中，其余的被阻塞在 `write_guard` ，只有当读者访问完毕，写者才有机会获得临界区的访问权
+* 若写者获得临界区的访问权，而且有源源不断的写者过来，那么读者能不能抢得临界区的访问权呢？**答案是肯定的**。考虑此时的读者进程阻塞情况，有一个读者进程阻塞在 `file_guard` 中，其余的读者均阻塞在 `reader_count_guard`，而由于 `write_guard` 的存在每个时刻只有一个写者进程阻塞在 `file_guard` 中，其余的全被阻塞在 `write_gurad`中。则当写者进程访问完毕后，此时阻塞在 `file_guard` 中的进程只有读者进程，则也就只有读者进程先被激活访问
+
+实现方案：
+
+```c
+int reader_count = 0;             // 读者队列的长度
+semaphore reader_count_guard = 1; // 保护对 `reader_count` 的访问
+semaphore file_guard = 1;         // 保护对文件资源的访问
+semaphore write_guard = 1;        // 保证阻塞在 file_guard 的写者唯一
+
+void reader() {
+    wait(reader_count_guard);
+    if (!reader_count) {
+        // if currently no reader, request file resource
+        wait(file_guard);
+    }
+    reader_count += 1;
+    signal(reader_count_guard);
+
+    // 执行读者代码
+
+    wait(reader_count_guard);
+    reader_count -= 1;
+    if (!reader_count) {
+        // release file resource if no reader
+        signal(file_guard);
+    }
+    signal(reader_count_guard);
+}
+
+void writer() {
+    wait(write_guard);
+    wait(file_guard);
+
+    // 执行写者代码
+
+    signal(file_guard);
+    signal(write_guard);
+}
+```
+
+##### 写者优先
+
+* 当有写者在阻塞队列时，应该阻止后续的读请求，禁止加入读者队列
+
+分析一下为什么叫做写者优先
+
+* 首先要解决的是当读者获得了访问临界区的权利时，且读者进程访问的很密集时 (即很多读者都需要访问)，写者如何抢得访问权呢？由于 `enter_guard` 的存在每次阻塞在 `read` 中的读者进程最多只有一个，而当读者进程访问时，写者进程一个被阻塞在 `read` 中，其余的全部阻塞在 `writer_count_guard` 中。当读者访问完毕，释放 `read`，此时，阻塞在其中的进程只有写者进程，则写者进程得到激活。
+* 当写者获得临界区的访问权时，读者只能等到临界区空闲时才能得到临界区访问权。因为当写者获得临界区时，所有的读者都会阻塞在 `enter_guard` 信号和 `read` 信号中。 而只有最后一个写者访问完临界区时，才会 `signal(read)`， 使得阻塞在 `read` 中唯一的读者获得临界区访问权。
+
+```c
+int reader_count = 0; // 读者队列的长度
+int writer_count = 0; // 写者队列的长度
+semaphore read = 1;
+semaphore reader_count_guard = 1; // 保护对 `reader_count` 的访问
+semaphore writer_count_guard = 1; // 保护对 `writer` 的访问
+semaphore file_guard = 1;         // 保护对文件资源的访问
+semaphore enter_guard = 1;	      // 保证阻塞在 read 的只有一个线程
+
+void reader() {
+    wait(enter_guard);
+    wait(read);
+    wait(reader_count_guard);
+    if (!reader_count) {
+        wait(file_guard);
+    }
+    reader_count += 1;
+    signal(reader_count_guard);
+    signal(read);
+    signal(enter_guard);
+
+    // perform reader code
+
+    wait(reader_count_guard);
+    reader_count -= 1;
+    if (!reader_count) {
+        signal(file_guard);
+    }
+    signal(reader_count_guard);
+}
+
+void writer() {
+    wait(writer_count_guard);
+    if (!writer_count) {
+        wait(read);
+    }
+    writer_count += 1;
+    signal(writer_count_guard);
+
+    wait(file_guard);
+
+    // perform writer code
+
+    signal(file_guard);
+
+    wait(writer_count_guard);
+    writer_count -= 1;
+    if (!writer_count) {
+        signal(read);
+    }
+    signal(writer_count_guard);
+}
+```
+
+##### 公平竞争
+
+* 读者和写者都是只要抢到 `enter_guard` 就可以阻止新的对方线程进入资源的等待队列
+
+```c
+int reader_count = 0; // 读者队列的长度
+semaphore reader_count_guard = 1; // 保护对 `reader_count` 的访问
+semaphore file_guard = 1;         // 保护对文件资源的访问
+semaphore enter_guard = 1;	      // 保证阻塞在 read 的只有一个线程
+
+void reader() {
+    wait(enter_guard);
+    wait(reader_count_guard);
+    if (!reader_count) {
+        wait(file_guard);
+    }
+    reader_count += 1;
+    signal(reader_count_guard);
+    signal(enter_guard);
+
+    // perform reader code
+
+    wait(reader_count_guard);
+    reader_count -= 1;
+    if (!reader_count) {
+        signal(file_guard);
+    }
+    signal(reader_count_guard);
+}
+
+void writer() {
+    wait(enter_guard);
+    wait(file_guard);
+
+    // perform writer code
+
+    signal(file_guard);
+    signal(enter_guard);
+}
+```
 
 ## 其他
 
@@ -613,3 +1047,11 @@ ELF 格式：
 2. https://www.cnblogs.com/zhuyuanhao/archive/2012/10/16/3262870.html
 3. https://github.com/jokmingwong/Monkey50
 4. https://zhuanlan.zhihu.com/p/57349087
+5. http://c.biancheng.net/view/1234.html
+6. [https://baike.baidu.com/item/%E7%AE%A1%E7%A8%8B](https://baike.baidu.com/item/管程)
+7. https://zhuanlan.zhihu.com/p/37808566
+8. [https://zh.wikipedia.org/wiki/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97](https://zh.wikipedia.org/wiki/消息队列)
+9. https://blog.csdn.net/c1194758555/article/details/52805918
+10. http://c.biancheng.net/cpp/html/2601.html
+11. https://www.jianshu.com/p/2226a61740a7
+12. https://blog.csdn.net/JY_Sharer/article/details/16960385
